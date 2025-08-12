@@ -39,7 +39,7 @@ Guidelines:
 `;
 
   const body = {
-    model: "gpt-4.1-mini",
+    model: "deepseek-chat",
     temperature: 0.2,
     messages: [
       { role: "system", content: "You output strict JSON when asked. Never include explanations." },
@@ -47,7 +47,7 @@ Guidelines:
     ],
   } as const;
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -58,8 +58,8 @@ Guidelines:
 
   if (!res.ok) {
     const err = await res.text();
-    toast.error("OpenAI API error");
-    throw new Error(`OpenAI error: ${res.status} ${err}`);
+    toast.error("DeepSeek API error");
+    throw new Error(`DeepSeek error: ${res.status} ${err}`);
   }
 
   const data = (await res.json()) as any;

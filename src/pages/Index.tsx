@@ -11,7 +11,7 @@ import { ExamQuestion } from "@/components/exam/ExamQuestion";
 import { ResultQuestion } from "@/components/exam/ResultQuestion";
 
 const Index = () => {
-  const [apiKey, setApiKey] = useState<string>(localStorage.getItem("openai_api_key") || "");
+  const [apiKey, setApiKey] = useState<string>(localStorage.getItem("deepseek_api_key") || localStorage.getItem("openai_api_key") || "");
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<"idle" | "generating" | "ready" | "exam" | "results">("idle");
   const [questions, setQuestions] = useState<Question[] | null>(null);
@@ -19,7 +19,7 @@ const Index = () => {
   const [score, setScore] = useState<number>(0);
 
   useEffect(() => {
-    localStorage.setItem("openai_api_key", apiKey);
+    localStorage.setItem("deepseek_api_key", apiKey);
   }, [apiKey]);
 
   const canStart = stage === "ready" && questions && questions.length === 40;
@@ -32,7 +32,7 @@ const Index = () => {
 
   const handleGenerate = async () => {
     if (!apiKey) {
-      toast.error("Please enter your OpenAI API key");
+      toast.error("Please enter your DeepSeek API key");
       return;
     }
     if (!file) {
@@ -47,7 +47,7 @@ const Index = () => {
       if (!text || text.length < 200) {
         toast.warning("PDF text seems very short. Results may be limited.");
       }
-      toast.info("Generating questions with OpenAI...", { duration: 2000 });
+      toast.info("Generating questions with DeepSeek...", { duration: 2000 });
       const qs = await generateQuestionsFromText(apiKey, text);
       setQuestions(qs);
       setAnswers(new Array(qs.length).fill(""));
@@ -94,7 +94,7 @@ const Index = () => {
           <section className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>1) OpenAI API Key</CardTitle>
+                <CardTitle>1) DeepSeek API Key</CardTitle>
                 <CardDescription>Stored locally in your browser. You can remove it anytime.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -191,7 +191,7 @@ const Index = () => {
 
       <footer className="border-t mt-10">
         <div className="container py-6 text-sm text-muted-foreground">
-          <p>Built for students — all processing stays in your browser, except the OpenAI request.</p>
+          <p>Built for students — all processing stays in your browser, except the DeepSeek request.</p>
         </div>
       </footer>
     </div>
