@@ -40,25 +40,35 @@ const Index = () => {
     }
     setStage("generating");
     try {
+      toast.info("Parsing PDF...");
       const text = await extractTextFromPDF(file);
       if (!text || text.length < 200) {
         toast.warning("PDF text seems very short. Results may be limited.");
       }
       
-      // Mock questions for demo purposes
-      const mockQuestions: Question[] = Array.from({ length: 40 }, (_, i) => ({
-        question: `Sample question ${i + 1} from the PDF content`,
-        options: [`Option A`, `Option B`, `Option C`, `Option D`],
-        answer: `Option A`
-      }));
+      toast.info("Generating questions with OpenAI...", { duration: 3000 });
       
-      setQuestions(mockQuestions);
-      setAnswers(new Array(mockQuestions.length).fill(""));
+      const response = await fetch('https://gkbtmxnxglhrugrjajsr.supabase.co/functions/v1/generate-questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate questions');
+      }
+
+      const { questions } = await response.json();
+      setQuestions(questions);
+      setAnswers(new Array(questions.length).fill(""));
       setStage("ready");
       toast.success("Questions generated successfully!");
     } catch (error) {
       console.error("Generate error:", error);
-      toast.error("Failed to generate questions");
+      toast.error(error instanceof Error ? error.message : "Failed to generate questions");
       setStage("idle");
     }
   };
@@ -176,7 +186,7 @@ const Index = () => {
 
       <footer className="border-t mt-10">
         <div className="container py-6 text-sm text-muted-foreground">
-          <p>Built for students — all processing stays in your browser.</p>
+          <p>Built for students — PDF parsing happens in your browser, questions generated with OpenAI.</p>
         </div>
       </footer>
     </div>
