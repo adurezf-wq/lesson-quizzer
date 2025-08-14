@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { Question } from "@/lib/openai";
+import type { Question } from "@/pages/Index";
 
 interface ResultQuestionProps {
   index: number;

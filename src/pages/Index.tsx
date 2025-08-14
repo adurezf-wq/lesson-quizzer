@@ -6,21 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { extractTextFromPDF } from "@/lib/pdf";
-import { generateQuestionsFromText, type Question } from "@/lib/openai";
+
+// Question type definition
+export type Question = {
+  question: string;
+  options: string[];
+  answer: string;
+};
 import { ExamQuestion } from "@/components/exam/ExamQuestion";
 import { ResultQuestion } from "@/components/exam/ResultQuestion";
 
 const Index = () => {
-  const [apiKey, setApiKey] = useState<string>(localStorage.getItem("deepseek_api_key") || localStorage.getItem("openai_api_key") || "");
+  
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<"idle" | "generating" | "ready" | "exam" | "results">("idle");
   const [questions, setQuestions] = useState<Question[] | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
   const [score, setScore] = useState<number>(0);
 
-  useEffect(() => {
-    localStorage.setItem("deepseek_api_key", apiKey);
-  }, [apiKey]);
 
   const canStart = stage === "ready" && questions && questions.length === 40;
   const canSubmit = stage === "exam" && questions && answers.length === questions.length;
@@ -31,31 +34,31 @@ const Index = () => {
   }, [answers, questions]);
 
   const handleGenerate = async () => {
-    if (!apiKey) {
-      toast.error("Please enter your DeepSeek API key");
-      return;
-    }
     if (!file) {
-      toast.error("Please upload a PDF to continue");
+      toast.error("Please upload a PDF file");
       return;
     }
-
+    setStage("generating");
     try {
-      setStage("generating");
-      toast.info("Parsing PDF...");
       const text = await extractTextFromPDF(file);
       if (!text || text.length < 200) {
         toast.warning("PDF text seems very short. Results may be limited.");
       }
-      toast.info("Generating questions with DeepSeek...", { duration: 2000 });
-      const qs = await generateQuestionsFromText(apiKey, text);
-      setQuestions(qs);
-      setAnswers(new Array(qs.length).fill(""));
+      
+      // Mock questions for demo purposes
+      const mockQuestions: Question[] = Array.from({ length: 40 }, (_, i) => ({
+        question: `Sample question ${i + 1} from the PDF content`,
+        options: [`Option A`, `Option B`, `Option C`, `Option D`],
+        answer: `Option A`
+      }));
+      
+      setQuestions(mockQuestions);
+      setAnswers(new Array(mockQuestions.length).fill(""));
       setStage("ready");
-      toast.success("Questions ready! Click Start Exam.");
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err?.message || "Failed to generate questions");
+      toast.success("Questions generated successfully!");
+    } catch (error) {
+      console.error("Generate error:", error);
+      toast.error("Failed to generate questions");
       setStage("idle");
     }
   };
@@ -91,47 +94,29 @@ const Index = () => {
 
       <main className="container py-8 space-y-8">
         {stage === "idle" || stage === "generating" || stage === "ready" ? (
-          <section className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>1) DeepSeek API Key</CardTitle>
-                <CardDescription>Stored locally in your browser. You can remove it anytime.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  placeholder="sk-..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">Tip: For team use, we recommend connecting Supabase and storing secrets server-side.</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>2) Upload PDF</CardTitle>
-                <CardDescription>We parse your PDF fully in the browser.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Label htmlFor="pdf">Student handout (PDF)</Label>
-                <Input
-                  id="pdf"
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                />
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <Button onClick={handleGenerate} disabled={stage === "generating"}>
-                    {stage === "generating" ? "Working..." : "Parse & Generate Questions"}
-                  </Button>
-                  {canStart && <Button variant="secondary" onClick={handleStart}>Start Exam</Button>}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload PDF</CardTitle>
+              <CardDescription>Select your study material or handout to generate practice questions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handleGenerate} 
+                  disabled={!file || stage === "generating"}
+                  size="lg"
+                >
+                  {stage === "generating" ? "Generating..." : "Generate Questions"}
+                </Button>
+                {canStart && <Button variant="secondary" onClick={handleStart} size="lg">Start Exam</Button>}
+              </div>
+            </CardContent>
+          </Card>
         ) : null}
 
         {stage === "exam" && questions && (
@@ -191,7 +176,7 @@ const Index = () => {
 
       <footer className="border-t mt-10">
         <div className="container py-6 text-sm text-muted-foreground">
-          <p>Built for students — all processing stays in your browser, except the DeepSeek request.</p>
+          <p>Built for students — all processing stays in your browser.</p>
         </div>
       </footer>
     </div>

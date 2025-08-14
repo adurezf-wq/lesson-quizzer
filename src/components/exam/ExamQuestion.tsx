@@ -1,7 +1,7 @@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import type { Question } from "@/lib/openai";
+import type { Question } from "@/pages/Index";
 
 interface ExamQuestionProps {
   index: number;
